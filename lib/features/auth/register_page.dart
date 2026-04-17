@@ -177,13 +177,16 @@ class _RegisterFormState extends State<RegisterForm> {
           SizedBox(height: spacing),
           Wrap(
             spacing: 16,
+            runSpacing: 16,
             children: <Widget>[
               FilledButton(
                 onPressed: _submit,
+                style: isMobile ? null : FilledButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 18)),
                 child: const Text('Реєстрація', style: TextStyle(fontSize: 16)),
               ),
               OutlinedButton(
                 onPressed: _openLogin,
+                style: isMobile ? null : OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 18)),
                 child: const Text('Відмінити', style: TextStyle(fontSize: 16)),
               ),
             ],

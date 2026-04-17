@@ -139,13 +139,16 @@ class _LoginFormState extends State<LoginForm> {
           SizedBox(height: spacing),
           Wrap(
             spacing: 16,
+            runSpacing: 16,
             children: <Widget>[
               FilledButton(
                 onPressed: _submit,
+                style: isMobile ? null : FilledButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 18)),
                 child: const Text('Увійти', style: TextStyle(fontSize: 16)),
               ),
               OutlinedButton(
                 onPressed: _openRegister,
+                style: isMobile ? null : OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 18)),
                 child: const Text('Реєстрація', style: TextStyle(fontSize: 16)),
               ),
             ],
