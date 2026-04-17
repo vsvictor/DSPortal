@@ -3,20 +3,42 @@ import 'package:dsportal/features/auth/auth_scope.dart';
 import 'package:dsportal/shared/portal_scaffold.dart';
 import 'package:flutter/material.dart';
 
-class LoginPage extends StatefulWidget {
+class LoginPage extends StatelessWidget {
   const LoginPage({super.key, this.redirectTo});
 
   final String? redirectTo;
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  Widget build(BuildContext context) {
+    return PortalScaffold(
+      title: 'Автентифікація',
+      body: LoginForm(redirectTo: redirectTo),
+    );
+  }
 }
 
-class _LoginPageState extends State<LoginPage> {
+class LoginForm extends StatefulWidget {
+  const LoginForm({
+    super.key,
+    this.redirectTo,
+    this.onAuthenticated,
+    this.onRegisterRequested,
+  });
+
+  final String? redirectTo;
+  final VoidCallback? onAuthenticated;
+  final VoidCallback? onRegisterRequested;
+
+  @override
+  State<LoginForm> createState() => _LoginFormState();
+}
+
+class _LoginFormState extends State<LoginForm> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   String? _errorText;
+  bool _isPasswordHidden = true;
 
   @override
   void dispose() {
@@ -41,6 +63,11 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
 
+    if (widget.onAuthenticated != null) {
+      widget.onAuthenticated!();
+      return;
+    }
+
     final String target = widget.redirectTo ?? AppRoutes.cabinet;
     Navigator.pushNamedAndRemoveUntil(
       context,
@@ -49,59 +76,94 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  void _openRegister() {
+    if (widget.onRegisterRequested != null) {
+      widget.onRegisterRequested!();
+      return;
+    }
+
+    Navigator.pushNamed(context, AppRoutes.register);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return PortalScaffold(
-      title: 'Вхід до закритої частини',
-      body: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            const InfoCard(
-              title: 'Демо-доступ',
-              content: 'E-mail: demo@digital.gov.ua\nПароль: Digital2026!',
-              icon: Icons.info,
+    return Form(
+      key: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          TextFormField(
+            controller: _emailController,
+            decoration: const InputDecoration(
+              labelText: 'E-mail',
+              isDense: true,
+              contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 0),
             ),
-            const SizedBox(height: 8),
-            TextFormField(
-              controller: _emailController,
-              decoration: const InputDecoration(labelText: 'E-mail'),
-              validator: (String? value) =>
-                  (value == null || !value.contains('@'))
-                  ? 'Вкажіть коректний e-mail'
-                  : null,
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _passwordController,
-              obscureText: true,
-              decoration: const InputDecoration(labelText: 'Пароль'),
-              validator: (String? value) =>
-                  (value == null || value.isEmpty) ? 'Вкажіть пароль' : null,
-            ),
-            if (_errorText != null) ...<Widget>[
-              const SizedBox(height: 12),
-              Text(
-                _errorText!,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
-            ],
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 8,
-              children: <Widget>[
-                FilledButton(onPressed: _submit, child: const Text('Увійти')),
-                OutlinedButton(
-                  onPressed: () => Navigator.pushNamed(context, AppRoutes.register),
-                  child: const Text('Реєстрація'),
+            validator: (String? value) =>
+                (value == null || !value.contains('@'))
+                ? 'Вкажіть коректний e-mail'
+                : null,
+          ),
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: _passwordController,
+            obscureText: _isPasswordHidden,
+            decoration: InputDecoration(
+              labelText: 'Пароль',
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 0),
+              suffixIcon: IconButton(
+                tooltip: _isPasswordHidden ? 'Показати пароль' : 'Сховати пароль',
+                iconSize: 20,
+                padding: EdgeInsets.zero,
+                onPressed: () {
+                  setState(() => _isPasswordHidden = !_isPasswordHidden);
+                },
+                icon: Icon(
+                  _isPasswordHidden ? Icons.visibility : Icons.visibility_off,
                 ),
-              ],
+              ),
+            ),
+            validator: (String? value) =>
+                (value == null || value.isEmpty) ? 'Вкажіть пароль' : null,
+          ),
+          if (_errorText != null) ...<Widget>[
+            const SizedBox(height: 8),
+            Text(
+              _errorText!,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.error,
+                fontSize: 12,
+              ),
             ),
           ],
-        ),
+          const SizedBox(height: 12),
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: FilledButton(
+                  onPressed: _submit,
+                  child: const Text(
+                    'Увійти',
+                    style: TextStyle(fontSize: 14),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: _openRegister,
+                  child: const Text(
+                    'Реєстрація',
+                    style: TextStyle(fontSize: 14),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 }
-
