@@ -87,6 +87,9 @@ class _LoginFormState extends State<LoginForm> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isMobile = Theme.of(context).platform == TargetPlatform.android || Theme.of(context).platform == TargetPlatform.iOS;
+    final double spacing = isMobile ? 8 : 16;
+
     return Form(
       key: _formKey,
       child: Column(
@@ -95,28 +98,26 @@ class _LoginFormState extends State<LoginForm> {
         children: <Widget>[
           TextFormField(
             controller: _emailController,
-            decoration: const InputDecoration(
+            style: TextStyle(fontSize: isMobile ? 14 : null),
+            decoration: InputDecoration(
               labelText: 'E-mail',
-              isDense: true,
-              contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 0),
+              contentPadding: isMobile ? const EdgeInsets.symmetric(horizontal: 12, vertical: 12) : null,
             ),
             validator: (String? value) =>
                 (value == null || !value.contains('@'))
                 ? 'Вкажіть коректний e-mail'
                 : null,
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: spacing),
           TextFormField(
             controller: _passwordController,
+            style: TextStyle(fontSize: isMobile ? 14 : null),
             obscureText: _isPasswordHidden,
             decoration: InputDecoration(
               labelText: 'Пароль',
-              isDense: true,
-              contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 0),
+              contentPadding: isMobile ? const EdgeInsets.symmetric(horizontal: 12, vertical: 12) : null,
               suffixIcon: IconButton(
                 tooltip: _isPasswordHidden ? 'Показати пароль' : 'Сховати пароль',
-                iconSize: 20,
-                padding: EdgeInsets.zero,
                 onPressed: () {
                   setState(() => _isPasswordHidden = !_isPasswordHidden);
                 },
@@ -129,36 +130,23 @@ class _LoginFormState extends State<LoginForm> {
                 (value == null || value.isEmpty) ? 'Вкажіть пароль' : null,
           ),
           if (_errorText != null) ...<Widget>[
-            const SizedBox(height: 8),
+            SizedBox(height: spacing),
             Text(
               _errorText!,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.error,
-                fontSize: 12,
-              ),
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
           ],
-          const SizedBox(height: 12),
-          Row(
+          SizedBox(height: spacing),
+          Wrap(
+            spacing: 16,
             children: <Widget>[
-              Expanded(
-                child: FilledButton(
-                  onPressed: _submit,
-                  child: const Text(
-                    'Увійти',
-                    style: TextStyle(fontSize: 14),
-                  ),
-                ),
+              FilledButton(
+                onPressed: _submit,
+                child: const Text('Увійти', style: TextStyle(fontSize: 16)),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: _openRegister,
-                  child: const Text(
-                    'Реєстрація',
-                    style: TextStyle(fontSize: 14),
-                  ),
-                ),
+              OutlinedButton(
+                onPressed: _openRegister,
+                child: const Text('Реєстрація', style: TextStyle(fontSize: 16)),
               ),
             ],
           ),

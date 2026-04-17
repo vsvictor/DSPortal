@@ -22,15 +22,17 @@ Future<bool?> _showAuthDialog(BuildContext context, Widget child) {
   return showDialog<bool>(
     context: context,
     builder: (BuildContext modalContext) {
+      final bool isMobile = Theme.of(modalContext).platform == TargetPlatform.android || Theme.of(modalContext).platform == TargetPlatform.iOS;
+
       return Dialog(
         insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
         child: ConstrainedBox(
           constraints: BoxConstraints(
             maxWidth: 520,
-            maxHeight: MediaQuery.sizeOf(modalContext).height * 0.85,
+            maxHeight: MediaQuery.sizeOf(modalContext).height * 0.98,
           ),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.fromLTRB(20, isMobile ? 10 : 20, 20, 20),
             child: child,
           ),
         ),
@@ -57,6 +59,8 @@ class _LoginModalContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isMobile = Theme.of(context).platform == TargetPlatform.android || Theme.of(context).platform == TargetPlatform.iOS;
+
     return SingleChildScrollView(
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       child: Column(
@@ -65,9 +69,11 @@ class _LoginModalContent extends StatelessWidget {
         children: <Widget>[
           Text(
             'Автентифікація',
-            style: Theme.of(context).textTheme.titleMedium,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              fontSize: isMobile ? 18 : null,
+            ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: isMobile ? 8 : 16),
           LoginForm(
             onAuthenticated: () => Navigator.of(context).pop(true),
             onRegisterRequested: () {
@@ -90,6 +96,8 @@ class _RegisterModalContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isMobile = Theme.of(context).platform == TargetPlatform.android || Theme.of(context).platform == TargetPlatform.iOS;
+
     return SingleChildScrollView(
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       child: Column(
@@ -98,9 +106,11 @@ class _RegisterModalContent extends StatelessWidget {
         children: <Widget>[
           Text(
             'Реєстрація',
-            style: Theme.of(context).textTheme.titleMedium,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              fontSize: isMobile ? 18 : null,
+            ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: isMobile ? 8 : 16),
           RegisterForm(
             onAuthenticated: () {
               final NavigatorState rootNavigator = Navigator.of(
