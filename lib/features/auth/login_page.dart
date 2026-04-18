@@ -2,6 +2,11 @@ import 'package:dsportal/app/routes.dart';
 import 'package:dsportal/features/auth/auth_scope.dart';
 import 'package:dsportal/shared/portal_scaffold.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'dart:convert';
+
+import 'package:http/http.dart' as http;
+import 'http_client_factory.dart';
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key, this.redirectTo});
@@ -35,8 +40,8 @@ class LoginForm extends StatefulWidget {
 
 class _LoginFormState extends State<LoginForm> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController(text: 'admin@admin.com');
+  final TextEditingController _passwordController = TextEditingController(text: 'change-me');
   String? _errorText;
   bool _isPasswordHidden = true;
 
@@ -47,21 +52,23 @@ class _LoginFormState extends State<LoginForm> {
     super.dispose();
   }
 
-  void _submit() {
+  void _submit() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
-    final auth = AuthScope.of(context);
-    final String? error = auth.login(
-      email: _emailController.text,
-      password: _passwordController.text,
-    );
+    final String? error = await _sendAuthRequest(_emailController.text, _passwordController.text);
+
+    if (!mounted) return;
 
     if (error != null) {
       setState(() => _errorText = error);
       return;
     }
+
+    // Тимчасово логінимо через внутрішній контролер без перевірки паролю
+    final auth = AuthScope.of(context);
+    // Додамо юзера щоб фейковий AuthController пропустив нас далі (або змініть його)
 
     if (widget.onAuthenticated != null) {
       widget.onAuthenticated!();
@@ -74,6 +81,44 @@ class _LoginFormState extends State<LoginForm> {
       target,
       (Route<dynamic> route) => route.settings.name == AppRoutes.home,
     );
+  }
+
+  Future<String?> _sendAuthRequest(String email, String password) async {
+    const String baseUrl = 'https://mobilespace.dev:7443';
+    final Uri url = Uri.parse('$baseUrl/auth/login');
+
+    final Map<String, String> body = {
+      'username': email,
+      'password': password,
+    };
+    final String jsonBody = jsonEncode(body);
+
+    http.Client? client;
+    try {
+      client = createHttpClient();
+
+      final http.Response response = await client.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonBody,
+      );
+
+      if (response.statusCode == 200) {
+        // Успішний логін
+        final data = jsonDecode(response.body);
+        final String accessToken = data['access_token'];
+        debugPrint('Отримано токен: $accessToken');
+        return null; // Немає помилок
+      } else {
+        return 'Невірний e-mail або пароль (Код: ${response.statusCode})';
+      }
+    } catch (e) {
+      debugPrint('\n--- Помилка виконання HTTP/3 запиту ---');
+      debugPrint(e.toString());
+      return 'Помилка з\'єднання з сервером';
+    } finally {
+      client?.close();
+    }
   }
 
   void _openRegister() {
