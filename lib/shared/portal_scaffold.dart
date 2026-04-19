@@ -11,11 +11,13 @@ class PortalScaffold extends StatelessWidget {
     required this.title,
     required this.body,
     this.currentRoute,
+    this.showTitle = true,
   });
 
   final String title;
   final Widget body;
   final String? currentRoute;
+  final bool showTitle;
 
   @override
   Widget build(BuildContext context) {
@@ -60,11 +62,13 @@ class PortalScaffold extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Text(
-                    title,
-                    style: Theme.of(context).textTheme.headlineMedium,
-                  ),
-                  const SizedBox(height: 16),
+                  if (showTitle) ...[
+                    Text(
+                      title,
+                      style: Theme.of(context).textTheme.headlineMedium,
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                   body,
                 ],
               ),

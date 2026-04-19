@@ -37,7 +37,7 @@ class HomePage extends StatelessWidget {
       body: SafeArea(
         child: LayoutBuilder(
           builder: (BuildContext context, BoxConstraints constraints) {
-            final bool isDesktop = constraints.maxWidth >= desktopBreakpoint;
+            final bool isDesktop = kIsWeb && constraints.maxWidth >= desktopBreakpoint;
             // Мобільний top-row (badge + меню) — тільки Android/iOS і не широкий екран
             final bool showNativeTopRow = _isMobile && !isDesktop;
             // Desktop top-row (badge + меню) — macOS/Windows/Linux на вузькому екрані
