@@ -2,6 +2,7 @@ import 'package:dsportal/app/routes.dart';
 import 'package:dsportal/core/theme.dart';
 import 'package:dsportal/features/auth/auth_modal.dart';
 import 'package:dsportal/features/auth/auth_scope.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class PortalScaffold extends StatelessWidget {
@@ -50,6 +51,7 @@ class PortalScaffold extends StatelessWidget {
         ),
       ),
       drawer: PortalDrawer(currentRoute: currentRoute),
+      endDrawer: AuthScope.of(context).isAuthenticated ? const PortalEndDrawer() : null,
       body: Column(
         children: <Widget>[
           Expanded(
@@ -119,14 +121,15 @@ class PortalDrawer extends StatelessWidget {
             ),
           ),
           const Divider(),
-          ListTile(
-            leading: const Icon(Icons.lock_outline),
-            title: Text(auth.isAuthenticated ? 'Закрита частина' : 'Кабінет (вхід)'),
-            onTap: () {
-              Navigator.pop(context);
-              openCabinetWithAuthModal(context);
-            },
-          ),
+          if (!auth.isAuthenticated)
+            ListTile(
+              leading: const Icon(Icons.lock_outline),
+              title: const Text('Кабінет (вхід)'),
+              onTap: () {
+                Navigator.pop(context); // Закриваємо ліву панель
+                openCabinetWithAuthModal(context);
+              },
+            ),
           if (auth.isAuthenticated)
             ListTile(
               leading: const Icon(Icons.logout),
@@ -204,3 +207,54 @@ class InfoCard extends StatelessWidget {
   }
 }
 
+class PortalEndDrawer extends StatelessWidget {
+  const PortalEndDrawer({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Drawer(
+      child: ListView(
+        children: <Widget>[
+          DrawerHeader(
+            decoration: const BoxDecoration(color: DsColors.blue),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: const <Widget>[
+                Text(
+                  'Інструменти',
+                  style: TextStyle(color: Colors.white, fontSize: 20),
+                ),
+                SizedBox(height: 6),
+                Text(
+                  'Закрита частина порталу',
+                  style: TextStyle(color: Colors.white70),
+                ),
+              ],
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.work),
+            title: const Text('Управління проектами'),
+            onTap: () {},
+          ),
+          ListTile(
+            leading: const Icon(Icons.description),
+            title: const Text('Документи'),
+            onTap: () {},
+          ),
+          ListTile(
+            leading: const Icon(Icons.chat),
+            title: const Text('Чат'),
+            onTap: () {},
+          ),
+          ListTile(
+            leading: const Icon(Icons.book),
+            title: const Text('СЕД'),
+            onTap: () {},
+          ),
+        ],
+      ),
+    );
+  }
+}

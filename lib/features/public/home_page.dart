@@ -28,10 +28,12 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const double desktopBreakpoint = 1000;
+    final auth = AuthScope.of(context);
 
     return Scaffold(
       backgroundColor: DsColors.blue,
       drawer: const PortalDrawer(currentRoute: AppRoutes.home),
+      endDrawer: auth.isAuthenticated ? const PortalEndDrawer() : null,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (BuildContext context, BoxConstraints constraints) {
@@ -229,6 +231,8 @@ class _DesktopNarrowTopRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final auth = AuthScope.of(context);
+
     return Container(
       padding: EdgeInsets.fromLTRB(20, topOffset, 20, 8),
       child: Row(
@@ -247,6 +251,20 @@ class _DesktopNarrowTopRow extends StatelessWidget {
           ),
           const Spacer(),
           const _EnterpriseBadge(), // повний текст за замовчуванням
+          if (auth.isAuthenticated) ...<Widget>[
+            const SizedBox(width: 8),
+            Builder(
+              builder: (BuildContext context) {
+                return IconButton.filledTonal(
+                  onPressed: () => Scaffold.of(context).openEndDrawer(),
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.white.withValues(alpha: 0.14),
+                  ),
+                  icon: const Icon(Icons.apps, color: Colors.white),
+                );
+              },
+            ),
+          ],
         ],
       ),
     );
@@ -260,6 +278,8 @@ class _NativeTopRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final auth = AuthScope.of(context);
+
     return Container(
       padding: EdgeInsets.fromLTRB(20, topOffset, 20, 8),
       child: Row(
@@ -277,6 +297,20 @@ class _NativeTopRow extends StatelessWidget {
           ),
           const Spacer(),
           const _EnterpriseBadge(label: 'ДП «Цифрове»'),
+          if (auth.isAuthenticated) ...<Widget>[
+            const SizedBox(width: 8),
+            Builder(
+              builder: (BuildContext context) {
+                return IconButton.filledTonal(
+                  onPressed: () => Scaffold.of(context).openEndDrawer(),
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.white.withValues(alpha: 0.14),
+                  ),
+                  icon: const Icon(Icons.apps, color: Colors.white),
+                );
+              },
+            ),
+          ],
         ],
       ),
     );
@@ -513,23 +547,31 @@ class _DesktopTopHeader extends StatelessWidget {
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
-                    children: publicSections
-                        .map(
-                          (PublicSection section) => _TopNavLink(
-                            label: section.title,
-                            onTap: () => Navigator.pushNamed(
-                              context,
-                              section.route,
-                            ),
+                    children: <Widget>[
+                      ...publicSections.map(
+                        (PublicSection section) => _TopNavLink(
+                          label: section.title,
+                          onTap: () => Navigator.pushNamed(
+                            context,
+                            section.route,
                           ),
-                        )
-                        .toList(),
+                        ),
+                      ),
+                      if (auth.isAuthenticated)
+                        const _ToolsDropdownMenu(),
+                    ],
                   ),
                 ),
               ),
               const SizedBox(width: 14),
               FilledButton(
-                onPressed: () => openCabinetWithAuthModal(context),
+                onPressed: () {
+                  if (kIsWeb && auth.isAuthenticated) {
+                    auth.logout();
+                  } else {
+                    openCabinetWithAuthModal(context);
+                  }
+                },
                 style: FilledButton.styleFrom(
                   backgroundColor: DsColors.blue,
                   foregroundColor: Colors.white,
@@ -538,7 +580,7 @@ class _DesktopTopHeader extends StatelessWidget {
                     vertical: 16,
                   ),
                 ),
-                child: Text(auth.isAuthenticated ? 'Кабінет' : 'Увійти'),
+                child: Text(auth.isAuthenticated ? (kIsWeb ? 'Вихід' : 'Кабінет') : 'Увійти'),
               ),
             ],
           ),
@@ -609,6 +651,55 @@ class _TopNavLink extends StatelessWidget {
         foregroundColor: const Color(0xFF4A566E),
       ),
       child: Text(label),
+    );
+  }
+}
+
+class _ToolsDropdownMenu extends StatelessWidget {
+  const _ToolsDropdownMenu();
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<String>(
+      tooltip: 'Інструменти',
+      offset: const Offset(0, 40),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: const <Widget>[
+            Text(
+              'Інструменти',
+              style: TextStyle(
+                color: Color(0xFF4A566E),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            Icon(Icons.arrow_drop_down, color: Color(0xFF4A566E)),
+          ],
+        ),
+      ),
+      itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+        const PopupMenuItem<String>(
+          value: 'projects',
+          child: Text('Управління проектами'),
+        ),
+        const PopupMenuItem<String>(
+          value: 'docs',
+          child: Text('Документи'),
+        ),
+        const PopupMenuItem<String>(
+          value: 'chat',
+          child: Text('Чат'),
+        ),
+        const PopupMenuItem<String>(
+          value: 'sed',
+          child: Text('СЕД'),
+        ),
+      ],
+      onSelected: (String value) {
+        // Here you handle sub-items click if needed
+      },
     );
   }
 }

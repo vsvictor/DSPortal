@@ -2,6 +2,7 @@ import 'package:dsportal/app/routes.dart';
 import 'package:dsportal/features/auth/auth_scope.dart';
 import 'package:dsportal/features/auth/login_page.dart';
 import 'package:dsportal/features/auth/register_page.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 Future<bool?> showLoginModal(BuildContext context) {
@@ -44,13 +45,17 @@ Future<bool?> _showAuthDialog(BuildContext context, Widget child) {
 Future<void> openCabinetWithAuthModal(BuildContext context) async {
   final auth = AuthScope.of(context);
   if (auth.isAuthenticated) {
-    Navigator.pushNamed(context, AppRoutes.cabinet);
+    if (!kIsWeb) {
+      Navigator.pushNamed(context, AppRoutes.cabinet);
+    }
     return;
   }
 
   final bool? isLoggedIn = await showLoginModal(context);
   if (isLoggedIn == true && context.mounted) {
-    Navigator.pushNamed(context, AppRoutes.cabinet);
+    if (!kIsWeb) {
+      Navigator.pushNamed(context, AppRoutes.cabinet);
+    }
   }
 }
 
@@ -118,7 +123,9 @@ class _RegisterModalContent extends StatelessWidget {
                 rootNavigator: true,
               );
               rootNavigator.pop(true);
-              rootNavigator.pushNamed(AppRoutes.cabinet);
+              if (!kIsWeb) {
+                rootNavigator.pushNamed(AppRoutes.cabinet);
+              }
             },
             onLoginRequested: () {
               final NavigatorState rootNavigator = Navigator.of(
