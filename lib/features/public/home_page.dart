@@ -1,5 +1,6 @@
 import 'package:dsportal/app/routes.dart';
 import 'package:dsportal/core/theme.dart';
+import 'package:dsportal/features/auth/auth_modal.dart';
 import 'package:dsportal/features/auth/auth_scope.dart';
 import 'package:dsportal/shared/portal_scaffold.dart';
 import 'package:flutter/foundation.dart';
@@ -528,7 +529,7 @@ class _DesktopTopHeader extends StatelessWidget {
               ),
               const SizedBox(width: 14),
               FilledButton(
-                onPressed: () => Navigator.pushNamed(context, AppRoutes.cabinet),
+                onPressed: () => openCabinetWithAuthModal(context),
                 style: FilledButton.styleFrom(
                   backgroundColor: DsColors.blue,
                   foregroundColor: Colors.white,

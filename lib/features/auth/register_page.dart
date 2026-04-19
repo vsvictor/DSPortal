@@ -3,23 +3,46 @@ import 'package:dsportal/features/auth/auth_scope.dart';
 import 'package:dsportal/shared/portal_scaffold.dart';
 import 'package:flutter/material.dart';
 
-class RegisterPage extends StatefulWidget {
+class RegisterPage extends StatelessWidget {
   const RegisterPage({super.key});
 
   @override
-  State<RegisterPage> createState() => _RegisterPageState();
+  Widget build(BuildContext context) {
+    return const PortalScaffold(
+      title: 'Реєстрація',
+      body: RegisterForm(),
+    );
+  }
 }
 
-class _RegisterPageState extends State<RegisterPage> {
+class RegisterForm extends StatefulWidget {
+  const RegisterForm({
+    super.key,
+    this.onAuthenticated,
+    this.onLoginRequested,
+  });
+
+  final VoidCallback? onAuthenticated;
+  final VoidCallback? onLoginRequested;
+
+  @override
+  State<RegisterForm> createState() => _RegisterFormState();
+}
+
+class _RegisterFormState extends State<RegisterForm> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _repeatPasswordController = TextEditingController();
   String? _errorText;
+  bool _isPasswordHidden = true;
+  bool _isRepeatPasswordHidden = true;
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _repeatPasswordController.dispose();
     super.dispose();
   }
 
@@ -39,6 +62,11 @@ class _RegisterPageState extends State<RegisterPage> {
       return;
     }
 
+    if (widget.onAuthenticated != null) {
+      widget.onAuthenticated!();
+      return;
+    }
+
     Navigator.pushNamedAndRemoveUntil(
       context,
       AppRoutes.cabinet,
@@ -46,63 +74,125 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
+  void _openLogin() {
+    if (widget.onLoginRequested != null) {
+      widget.onLoginRequested!();
+      return;
+    }
+
+    Navigator.of(context).maybePop().then((bool popped) {
+      if (!popped && mounted) {
+        Navigator.pushNamed(context, AppRoutes.login);
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    return PortalScaffold(
-      title: 'Реєстрація користувача',
-      body: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            TextFormField(
-              controller: _emailController,
-              decoration: const InputDecoration(labelText: 'E-mail'),
-              validator: (String? value) =>
-                  (value == null || !value.contains('@'))
-                  ? 'Вкажіть коректний e-mail'
-                  : null,
+    final bool isMobile = Theme.of(context).platform == TargetPlatform.android || Theme.of(context).platform == TargetPlatform.iOS;
+    final double spacing = isMobile ? 8 : 16;
+
+    return Form(
+      key: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          TextFormField(
+            controller: _emailController,
+            style: TextStyle(fontSize: isMobile ? 14 : null),
+            decoration: InputDecoration(
+              labelText: 'E-mail',
+              contentPadding: isMobile ? const EdgeInsets.symmetric(horizontal: 12, vertical: 8) : null,
             ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _passwordController,
-              obscureText: true,
-              decoration: const InputDecoration(labelText: 'Пароль'),
-              validator: (String? value) =>
-                  (value == null || value.length < 8)
-                  ? 'Пароль має містити щонайменше 8 символів'
-                  : null,
-            ),
-            if (_errorText != null) ...<Widget>[
-              const SizedBox(height: 12),
-              Text(
-                _errorText!,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
+            validator: (String? value) =>
+                (value == null || !value.contains('@'))
+                ? 'Вкажіть коректний e-mail'
+                : null,
+          ),
+          SizedBox(height: spacing),
+          TextFormField(
+            controller: _passwordController,
+            style: TextStyle(fontSize: isMobile ? 14 : null),
+            obscureText: _isPasswordHidden,
+            decoration: InputDecoration(
+              labelText: 'Пароль',
+              contentPadding: isMobile ? const EdgeInsets.symmetric(horizontal: 12, vertical: 8) : null,
+              suffixIcon: IconButton(
+                tooltip: _isPasswordHidden ? 'Показати пароль' : 'Сховати пароль',
+                onPressed: () {
+                  setState(() => _isPasswordHidden = !_isPasswordHidden);
+                },
+                icon: Icon(
+                  _isPasswordHidden ? Icons.visibility : Icons.visibility_off,
+                ),
               ),
-            ],
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 8,
-              children: <Widget>[
-                FilledButton(
-                  onPressed: _submit,
-                  child: const Text('Створити акаунт'),
+            ),
+            validator: (String? value) =>
+                (value == null || value.length < 8)
+                ? 'Пароль має містити щонайменше 8 символів'
+                : null,
+          ),
+          SizedBox(height: spacing),
+          TextFormField(
+            controller: _repeatPasswordController,
+            style: TextStyle(fontSize: isMobile ? 14 : null),
+            obscureText: _isRepeatPasswordHidden,
+            decoration: InputDecoration(
+              labelText: 'Повторіть пароль',
+              contentPadding: isMobile ? const EdgeInsets.symmetric(horizontal: 12, vertical: 8) : null,
+              suffixIcon: IconButton(
+                tooltip: _isRepeatPasswordHidden
+                    ? 'Показати пароль'
+                    : 'Сховати пароль',
+                onPressed: () {
+                  setState(
+                    () => _isRepeatPasswordHidden = !_isRepeatPasswordHidden,
+                  );
+                },
+                icon: Icon(
+                  _isRepeatPasswordHidden
+                      ? Icons.visibility
+                      : Icons.visibility_off,
                 ),
-                OutlinedButton(
-                  onPressed: () async {
-                    final bool popped = await Navigator.of(context).maybePop();
-                    if (!popped && context.mounted) {
-                      Navigator.pushNamed(context, AppRoutes.login);
-                    }
-                  },
-                  child: const Text('Назад до входу'),
-                ),
-              ],
+              ),
+            ),
+            validator: (String? value) {
+              if (value == null || value.isEmpty) {
+                return 'Повторіть пароль';
+              }
+              if (value != _passwordController.text) {
+                return 'Паролі не збігаються';
+              }
+              return null;
+            },
+          ),
+          if (_errorText != null) ...<Widget>[
+            SizedBox(height: spacing),
+            Text(
+              _errorText!,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
           ],
-        ),
+          SizedBox(height: spacing),
+          Wrap(
+            spacing: 16,
+            runSpacing: 16,
+            children: <Widget>[
+              FilledButton(
+                onPressed: _submit,
+                style: isMobile ? null : FilledButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 18)),
+                child: const Text('Реєстрація', style: TextStyle(fontSize: 16)),
+              ),
+              OutlinedButton(
+                onPressed: _openLogin,
+                style: isMobile ? null : OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 18)),
+                child: const Text('Відмінити', style: TextStyle(fontSize: 16)),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 }
-

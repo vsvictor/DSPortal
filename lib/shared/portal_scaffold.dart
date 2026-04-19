@@ -1,5 +1,6 @@
 import 'package:dsportal/app/routes.dart';
 import 'package:dsportal/core/theme.dart';
+import 'package:dsportal/features/auth/auth_modal.dart';
 import 'package:dsportal/features/auth/auth_scope.dart';
 import 'package:flutter/material.dart';
 
@@ -123,7 +124,7 @@ class PortalDrawer extends StatelessWidget {
             title: Text(auth.isAuthenticated ? 'Закрита частина' : 'Кабінет (вхід)'),
             onTap: () {
               Navigator.pop(context);
-              Navigator.pushNamed(context, AppRoutes.cabinet);
+              openCabinetWithAuthModal(context);
             },
           ),
           if (auth.isAuthenticated)
