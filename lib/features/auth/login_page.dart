@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'http_client_factory.dart';
 
 class LoginPage extends StatelessWidget {
@@ -66,9 +67,7 @@ class _LoginFormState extends State<LoginForm> {
       return;
     }
 
-    // Тимчасово логінимо через внутрішній контролер без перевірки паролю
-    final auth = AuthScope.of(context);
-    // Додамо юзера щоб фейковий AuthController пропустив нас далі (або змініть його)
+    // AuthState вже оновлено всередині _sendAuthRequest
 
     if (widget.onAuthenticated != null) {
       widget.onAuthenticated!();
@@ -107,6 +106,49 @@ class _LoginFormState extends State<LoginForm> {
         // Успішний логін
         final data = jsonDecode(response.body);
         final String accessToken = data['access_token'];
+        final String refreshToken = data['refresh_token'];
+
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('access_token', accessToken);
+        await prefs.setString('refresh_token', refreshToken);
+
+        // Розбір JWT (payload - друга частина)
+        final parts = accessToken.split('.');
+        if (parts.length != 3) {
+          return 'Невалідний токен';
+        }
+
+        final payloadPart = parts[1];
+        final String normalized = base64Url.normalize(payloadPart);
+        final String decodedPayload = utf8.decode(base64Url.decode(normalized));
+        final Map<String, dynamic> payload = jsonDecode(decodedPayload);
+
+        final id = payload['id'];
+        if (id == null) {
+          return 'ID не знайдено в токені';
+        }
+
+        // Отримання профілю
+        final Uri profileUrl = Uri.parse('$baseUrl/profile/$id');
+        final http.Response profileResponse = await client.get(
+          profileUrl,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $accessToken',
+          },
+        );
+
+        if (profileResponse.statusCode == 200) {
+          debugPrint('Профіль успішно отримано: ${profileResponse.body}');
+
+          if (mounted) {
+            final auth = AuthScope.of(context);
+            auth.setAuthenticatedUser(email, jsonDecode(utf8.decode(profileResponse.bodyBytes)));
+          }
+        } else {
+          return 'Помилка отримання профілю (Код: ${profileResponse.statusCode})';
+        }
+
         debugPrint('Отримано токен: $accessToken');
         return null; // Немає помилок
       } else {
